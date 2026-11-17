@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="nl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roestuin 2027 planning</title>
+<style>
+:root{
+  --bg:#f7f6f3; --card:#ffffff; --ink:#1f1e1c; --quiet:#6b6862; --line:#e4e1da; --grid:#ecebe6;
+  --accent:#2f6fde; --danger:#d0453a; --good:#2e8b57; --warn:#b7791f;
+  --g1:#2f6fde; --g2:#c2410c; --g3:#7c3aed; --g4:#0f8a7a; --g5:#b7791f; --g6:#db2777; --g7:#64748b; --g8:#4d7c0f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171716; --card:#21211f; --ink:#ecebe7; --quiet:#a19e97; --line:#34332f; --grid:#2b2a27;
+    --accent:#6b9bff; --danger:#ff7b6e; --good:#5fc48b; --warn:#e0b04f;
+    --g1:#6b9bff; --g2:#fb8a4c; --g3:#a78bfa; --g4:#3cc5b2; --g5:#e0b04f; --g6:#f472b6; --g7:#94a3b8; --g8:#a3d65c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171716; --card:#21211f; --ink:#ecebe7; --quiet:#a19e97; --line:#34332f; --grid:#2b2a27;
+  --accent:#6b9bff; --danger:#ff7b6e; --good:#5fc48b; --warn:#e0b04f;
+  --g1:#6b9bff; --g2:#fb8a4c; --g3:#a78bfa; --g4:#3cc5b2; --g5:#e0b04f; --g6:#f472b6; --g7:#94a3b8; --g8:#a3d65c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Inter,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px 64px}
+.savebar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin:0 -16px 24px;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.savebar .status{font-size:13px;color:var(--quiet)}
+.savebar .status.dirty{color:var(--warn);font-weight:600}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+h1{margin:0;font-size:26px;letter-spacing:-.01em}
+h1 input{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px dashed transparent;padding:0;width:min(520px,80vw)}
+h1 input:hover,h1 input:focus{border-bottom-color:var(--line);outline:none}
+.sub{color:var(--quiet);margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=date]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.count{font-size:13px;color:var(--quiet);text-align:right}
+.count b{display:block;font-size:30px;color:var(--ink);line-height:1.1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.spacer{flex:1}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--quiet)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{font-size:13px;border-radius:999px;padding:3px 10px 3px 8px;border:1px solid var(--line);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip.off{opacity:.4}
+label.toggle{font-size:13px;color:var(--quiet);display:flex;gap:6px;align-items:center;cursor:pointer}
+#chart svg{display:block;width:100%}
+#chart svg text{font-family:inherit}
+.bar{cursor:pointer}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--quiet);margin-top:8px}
+.legend span{display:flex;align-items:center;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--quiet);font-size:12.5px;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:3px 6px;border-bottom:1px solid var(--grid);vertical-align:middle}
+td input[type=text],td input[type=date]{font:inherit;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;width:100%}
+td input:hover{border-color:var(--line)}
+td input:focus{border-color:var(--accent);outline:none;background:var(--card)}
+td input:disabled{opacity:.35}
+td input[type=checkbox]{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
+td.c{text-align:center;width:44px}
+td.palm{width:28px;text-align:center;cursor:help}
+td.del{width:36px}
+td.del button{border:0;color:var(--quiet);padding:4px 8px;background:transparent}
+td.del button:hover{color:var(--danger)}
+tr.done td input[type=text]{text-decoration:line-through;color:var(--quiet)}
+tr.late td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+tr.flash{animation:flash 1.2s}
+@keyframes flash{0%{background:color-mix(in srgb,var(--accent) 22%,transparent)}100%{background:transparent}}
+.tablewrap{overflow-x:auto}
+.hint{font-size:12.5px;color:var(--quiet);margin-top:10px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .1s;max-width:260px;z-index:10}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:90vw}
+@media (max-width:640px){ h1{font-size:21px} .count b{font-size:24px} .hide-s{display:none} }
+@media print{ .savebar,.toolbar button,.chips,.hint,td.del{display:none!important} body{background:#fff} .card{border:0;padding:0} }
+</style>
+<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,#onetap_google_intermediate_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,.adthrive-auto-injected-player-container,.adthrive[id^="cls-video-container"]:has(.adthrive-auto-injected-player-container),#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style></head>
+<body>
+<!--
+  ALLE GEGEVENS STAAN IN HET BLOK HIERONDER (id="data").
+  Normaal pas je alles aan in de browser en klik je op "Opslaan".
+-->
+<script id="data" type="application/json">
+{
+  "festival": {
+    "naam": "Roestuin 2027",
+    "datum": "2027-05-29"
+  },
+  "wispo": {
+    "van": "",
+    "tot": ""
+  },
+  "items": [
+    {
+      "groep": "Locatie",
+      "wat": "Locatie vastleggen",
+      "start": "2026-11-16",
+      "deadline": "2026-12-18",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Locatie",
+      "wat": "Locatiebezoek met checklist",
+      "start": "",
+      "deadline": "2026-11-27",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Locatie",
+      "wat": "Contract getekend door bestuur",
+      "start": "",
+      "deadline": "2026-12-18",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Lars vragen voor website + domein",
+      "start": "",
+      "deadline": "2026-11-27",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Thema, logo en huisstijl",
+      "start": "2026-12-04",
+      "deadline": "2026-12-18",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Save the Date online",
+      "start": "",
+      "deadline": "2027-01-11",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Promotieplanning af",
+      "start": "",
+      "deadline": "2027-01-29",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Website klaar voor ticketverkoop",
+      "start": "",
+      "deadline": "2027-02-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Locatie reveal + start ticketverkoop",
+      "start": "",
+      "deadline": "2027-03-08",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Thema & promotie",
+      "wat": "Aankondigingen en promotie",
+      "start": "2027-03-08",
+      "deadline": "2027-05-28",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Eerste begroting naar bestuur",
+      "start": "",
+      "deadline": "2026-12-11",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Artiestenlijst in schema",
+      "start": "",
+      "deadline": "2026-12-11",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Artiesten benaderen en boeken",
+      "start": "2026-12-11",
+      "deadline": "2027-02-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Headliners geboekt",
+      "start": "",
+      "deadline": "2027-01-29",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Eerste schets timetable",
+      "start": "",
+      "deadline": "2027-01-29",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Line-up rond, contracten getekend",
+      "start": "",
+      "deadline": "2027-02-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "DERM-artiesten + ticketbeleid",
+      "start": "",
+      "deadline": "2027-02-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Riders en praktische info",
+      "start": "2027-01-29",
+      "deadline": "2027-03-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Artiesten",
+      "wat": "Timetable definitief",
+      "start": "",
+      "deadline": "2027-05-07",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Kraampjes & sponsoren",
+      "wat": "Kraampjes en sponsoren benaderen",
+      "start": "2027-02-01",
+      "deadline": "2027-03-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Kraampjes & sponsoren",
+      "wat": "Sponsoren vastgelegd",
+      "start": "",
+      "deadline": "2027-03-26",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Kraampjes & sponsoren",
+      "wat": "Kraampjes definitief + plattegrond",
+      "start": "",
+      "deadline": "2027-04-16",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Materiaallijst af",
+      "start": "",
+      "deadline": "2027-04-16",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Ontbrekend materiaal gehuurd",
+      "start": "",
+      "deadline": "2027-04-30",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Draaiboek",
+      "start": "2027-04-01",
+      "deadline": "2027-05-21",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Diensten verdeeld",
+      "start": "",
+      "deadline": "2027-05-07",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Externe afspraken bevestigd",
+      "start": "",
+      "deadline": "2027-05-14",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Iedereen gebriefd",
+      "start": "",
+      "deadline": "2027-05-21",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Techniek & draaiboek",
+      "wat": "Materialen ophalen",
+      "start": "",
+      "deadline": "2027-05-28",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Afronding",
+      "wat": "Materialen retour",
+      "start": "",
+      "deadline": "2027-05-31",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Afronding",
+      "wat": "Bedankmails + Instagrampost",
+      "start": "",
+      "deadline": "2027-06-04",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Afronding",
+      "wat": "Evaluatie met commissie",
+      "start": "",
+      "deadline": "2027-06-18",
+      "wie": "",
+      "klaar": false
+    },
+    {
+      "groep": "Afronding",
+      "wat": "Afrekening + overdrachtsdocument",
+      "start": "",
+      "deadline": "2027-06-30",
+      "wie": "",
+      "klaar": false
+    }
+  ],
+  "afwezig": [
+    {
+      "wie": "Hidde",
+      "wispo": false,
+      "van": "",
+      "tot": ""
+    },
+    {
+      "wie": "Jasper",
+      "wispo": false,
+      "van": "",
+      "tot": ""
+    },
+    {
+      "wie": "Jasper",
+      "wispo": false,
+      "van": "2027-04-12",
+      "tot": "2027-04-25"
+    },
+    {
+      "wie": "Puck",
+      "wispo": false,
+      "van": "",
+      "tot": ""
+    },
+    {
+      "wie": "Puck",
+      "wispo": false,
+      "van": "2027-03-15",
+      "tot": "2027-04-15"
+    },
+    {
+      "wie": "Puck",
+      "wispo": false,
+      "van": "2027-05-01",
+      "tot": "2027-05-08"
+    },
+    {
+      "wie": "Puck",
+      "wispo": false,
+      "van": "2027-05-16",
+      "tot": "2027-05-22"
+    },
+    {
+      "wie": "Lizzie",
+      "wispo": false,
+      "van": "2026-11-23",
+      "tot": "2027-01-31"
+    },
+    {
+      "wie": "Caat",
+      "wispo": false,
+      "van": "2026-12-26",
+      "tot": "2027-01-09"
+    },
+    {
+      "wie": "Caat",
+      "wispo": false,
+      "van": "2027-01-30",
+      "tot": "2027-02-07"
+    },
+    {
+      "wie": "Vanes",
+      "wispo": false,
+      "van": "2026-12-13",
+      "tot": "2027-01-16"
+    },
+    {
+      "wie": "Aimee",
+      "wispo": false,
+      "van": "",
+      "tot": ""
+    }
+  ]
+}
+</script>
+
+<div class="wrap">
+  <div class="savebar">
+    <button class="primary" id="save">Opslaan</button>
+    <span class="status" id="status">Alles opgeslagen</span>
+    <span class="spacer"></span>
+    <span class="status hide-s">Ctrl/⌘ + S</span>
+  </div>
+
+  <header>
+    <div>
+      <h1><input id="fname" aria-label="Naam festival"></h1>
+      <div class="sub">Festivaldatum <input type="date" id="fdate"> <span id="progress"></span></div>
+      <div class="sub" id="away"></div>
+    </div>
+    <div class="count"><b id="days"></b>dagen tot het festival</div>
+  </header>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Tijdlijn</strong>
+      <span class="spacer"></span>
+      <label class="toggle"><input type="checkbox" id="hideDone"> verberg afgerond</label>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="chart"></div>
+    <div class="legend">
+      <span><svg width="22" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--danger)" stroke-width="1.5"></line></svg>vandaag</span>
+      <span><svg width="22" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"></line></svg>festival</span>
+      <span><svg width="12" height="12"><path d="M6 0l6 6-6 6-6-6z" fill="var(--quiet)"></path></svg>deadline</span>
+      <span><svg width="22" height="12"><rect x="0" y="1" width="22" height="10" rx="5" fill="var(--quiet)" fill-opacity=".25" stroke="var(--quiet)"></rect></svg>periode</span>
+      <span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" rx="5" fill="none" stroke="var(--danger)" stroke-width="1.5"></rect></svg>te laat</span>
+      <span><svg width="22" height="12"><rect x="0" y="1" width="22" height="10" rx="3" fill="url(#lg-hatch)" stroke="var(--line)"></rect><defs><pattern id="lg-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="var(--quiet)" stroke-width="2" stroke-opacity=".4"></line></pattern></defs></svg>weg</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Deadlines</strong>
+      <span class="spacer"></span>
+      <button id="addItem">+ Deadline</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Wat</th><th>Groep</th><th>Start</th><th>Deadline</th><th>Wie</th><th></th><th>Klaar</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <datalist id="groups"></datalist>
+    <p class="hint">Laat <em>Start</em> leeg voor een losse deadline (ruitje), vul hem in voor een periode (balk). Een nieuwe groepsnaam krijgt vanzelf een kleur. Meerdere mensen bij één taak? Schrijf <em>Puck, Jasper</em>. 🌴 betekent dat iemand weg is op de deadline.</p>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Wie is er weg</strong>
+      <span class="spacer"></span>
+      <button id="addAbs">+ Afwezigheid</button>
+    </div>
+    <div class="sub" style="margin:0 0 10px">Wispo: <input type="date" id="wvan" aria-label="Wispo van"> t/m <input type="date" id="wtot" aria-label="Wispo tot"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Wie</th><th>Wispo</th><th>Van</th><th>Tot en met</th><th></th></tr></thead>
+        <tbody id="absrows"></tbody>
+      </table>
+    </div>
+    <p class="hint">Vink <em>Wispo</em> aan als iemand meegaat; dan gelden de wispo-data hierboven.</p>
+  </div>
+</div>
+<div id="tip" style="left: 696px; top: 403px; opacity: 0;"></div>
+<div id="toast"></div>
+
+<script>
+// ---------- gegevens ----------
+let state = JSON.parse(document.getElementById('data').textContent);
+let uid = 0;
+const withIds = () => { state.items.forEach(i => i._id ??= 'i' + uid++); state.afwezig.forEach(a => a._id ??= 'a' + uid++); };
+withIds();
+
+// ---------- hulpjes ----------
+const DAY = 864e5;
+const t = d => Date.parse(d + 'T00:00:00Z') / DAY;
+const iso = n => new Date(n * DAY).toISOString().slice(0, 10);
+const todayIso = () => { const n = new Date(); return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())).toISOString().slice(0, 10); };
+const MN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const DN = ['zo','ma','di','wo','do','vr','za'];
+const fmt = d => d ? `${+d.slice(8)} ${MN[+d.slice(5,7)-1]}` : '';
+const fmtLong = d => d ? `${DN[new Date(d+'T00:00:00Z').getUTCDay()]} ${fmt(d)} ${d.slice(0,4)}` : '';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const okDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && !isNaN(Date.parse(d));
+const FEST = 'Festival', AW = 'Afwezig';
+
+const groupsList = () => {
+  const gs = [...new Set(state.items.map(i => i.groep || 'Overig'))];
+  const after = gs.findIndex(g => state.items.filter(i => (i.groep || 'Overig') === g).every(i => i.deadline > state.festival.datum));
+  gs.splice(after >= 0 ? after : gs.length, 0, FEST);
+  return gs;
+};
+const colors = () => { const c = {}; let n = 0; groupsList().forEach(g => c[g] = g === FEST ? '--accent' : `--g${(n++ % 8) + 1}`); c[AW] = '--quiet'; return c; };
+
+const absences = () => state.afwezig.map(a => {
+  const van = a.wispo ? state.wispo.van : a.van, tot = a.wispo ? state.wispo.tot : a.tot;
+  return { ...a, van, tot, ok: okDate(van) && okDate(tot) && van <= tot };
+});
+const names = s => String(s || '').split(/,|&|\+|\/|\sen\s/).map(x => x.trim().toLowerCase()).filter(Boolean);
+const awayOn = (wie, d) => okDate(d) ? absences().filter(a => a.ok && names(wie).includes((a.wie || '').trim().toLowerCase()) && a.van <= d && d <= a.tot) : [];
+const isLate = it => !it.klaar && okDate(it.deadline) && it.deadline < todayIso();
+
+let hidden = new Set(), hideDone = false;
+
+// ---------- opslaan ----------
+let dirty = false, fileHandle = null;
+function markDirty(){ dirty = true; const s = document.getElementById('status'); s.textContent = '● Niet opgeslagen wijzigingen'; s.className = 'status dirty'; }
+function markSaved(how){ dirty = false; const s = document.getElementById('status'); s.textContent = how || 'Alles opgeslagen'; s.className = 'status'; }
+function toast(msg){ const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 3200); }
+function changed(){ markDirty(); }
+
+function serialize(){
+  const clean = JSON.parse(JSON.stringify(state, (k, v) => k === '_id' ? undefined : v));
+  const json = JSON.stringify(clean, null, 2).replace(/</g, '\\u003c');
+  const root = document.documentElement.cloneNode(true);
+  ['chart','rows','absrows','chips','away','progress','days','groups','tip','toast'].forEach(id => { const el = root.querySelector('#' + id); if (el) el.innerHTML = ''; });
+  root.querySelector('#data').textContent = '\n' + json + '\n';
+  root.querySelector('#status').textContent = 'Alles opgeslagen';
+  root.querySelector('#status').className = 'status';
+  root.querySelectorAll('input').forEach(i => { i.removeAttribute('value'); i.removeAttribute('checked'); });
+  root.querySelectorAll('tr.flash').forEach(r => r.classList.remove('flash'));
+  return '<!doctype html>\n' + root.outerHTML + '\n';
+}
+const fileName = () => decodeURIComponent(location.pathname.split('/').pop() || '') || 'roestuin-planning.html';
+
+// bewaar de bestandskoppeling tussen sessies (Chrome/Edge)
+const idb = (mode, fn) => new Promise((res, rej) => {
+  try { const r = indexedDB.open('roestuin-planning', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('h');
+    r.onsuccess = () => { const tx = r.result.transaction('h', mode); const q = fn(tx.objectStore('h')); tx.oncomplete = () => res(q && q.result); tx.onerror = () => rej(tx.error); };
+    r.onerror = () => rej(r.error);
+  } catch (e) { rej(e); }
+});
+const handleKey = () => location.pathname;
+idb('readonly', s => s.get(handleKey())).then(h => { if (h) fileHandle = h; }).catch(() => {});
+
+async function save(){
+  const html = serialize();
+  if (window.showSaveFilePicker) {
+    try {
+      if (fileHandle && (await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+        if ((await fileHandle.requestPermission({ mode: 'readwrite' })) !== 'granted') fileHandle = null;
+      }
+      if (!fileHandle) {
+        toast('Kies dit bestand (' + fileName() + ') om het te overschrijven. Dat hoeft maar één keer.');
+        fileHandle = await showSaveFilePicker({ suggestedName: fileName(), types: [{ description: 'HTML-pagina', accept: { 'text/html': ['.html'] } }] });
+        idb('readwrite', s => s.put(fileHandle, handleKey())).catch(() => {});
+      }
+      const w = await fileHandle.createWritable(); await w.write(html); await w.close();
+      markSaved('Opgeslagen om ' + new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+      toast('Opgeslagen in ' + fileHandle.name);
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      fileHandle = null;
+    }
+  }
+  // terugval (Safari/Firefox): download een nieuwe versie
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  a.download = fileName(); a.click(); URL.revokeObjectURL(a.href);
+  markSaved('Gedownload – vervang je oude bestand');
+  toast('Deze browser kan niet direct opslaan. De nieuwe versie staat in je Downloads; vervang daarmee het oude bestand.');
+}
+document.getElementById('save').onclick = save;
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
+addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------- weergave ----------
+function renderHeader(){
+  document.getElementById('fname').value = state.festival.naam;
+  document.getElementById('fdate').value = state.festival.datum;
+  document.getElementById('wvan').value = state.wispo.van || '';
+  document.getElementById('wtot').value = state.wispo.tot || '';
+  document.title = state.festival.naam + ' planning';
+  const d = okDate(state.festival.datum) ? Math.round(t(state.festival.datum) - t(todayIso())) : NaN;
+  document.getElementById('days').textContent = isNaN(d) ? '–' : d >= 0 ? d : 'voorbij';
+  const done = state.items.filter(i => i.klaar).length, late = state.items.filter(isLate).length;
+  document.getElementById('progress').textContent = `· ${done}/${state.items.length} afgerond` + (late ? ` · ${late} te laat` : '');
+  const today = todayIso(), soonEnd = iso(t(today) + 14), abs = absences();
+  const now = abs.filter(a => a.ok && a.van <= today && today <= a.tot).map(a => `${esc(a.wie)} (t/m ${fmt(a.tot)})`);
+  const soon = abs.filter(a => a.ok && a.van > today && a.van <= soonEnd).map(a => `${esc(a.wie)} (vanaf ${fmt(a.van)})`);
+  document.getElementById('away').innerHTML = !abs.length ? '' : [now.length ? `🌴 Nu weg: ${now.join(', ')}` : '🌴 Iedereen is er', soon.length ? `binnenkort weg: ${soon.join(', ')}` : ''].filter(Boolean).join(' · ');
+}
+
+function renderChips(){
+  const COL = colors(), list = state.afwezig.length ? [AW, ...groupsList()] : groupsList();
+  const el = document.getElementById('chips');
+  el.innerHTML = list.map(g => `<span class="chip ${hidden.has(g) ? 'off' : ''}" data-g="${esc(g)}"><i style="background:var(${COL[g]})"></i>${esc(g)}</span>`).join('');
+  el.querySelectorAll('.chip').forEach(c => c.onclick = () => { const g = c.dataset.g; hidden.has(g) ? hidden.delete(g) : hidden.add(g); renderChips(); renderChart(); });
+  document.getElementById('groups').innerHTML = groupsList().filter(g => g !== FEST).map(g => `<option value="${esc(g)}">`).join('');
+}
+
+function renderChart(){
+  const COL = colors(), box = document.getElementById('chart');
+  const W = Math.max(box.clientWidth, 320), small = W < 600;
+  const L = small ? 130 : 230, R = small ? 56 : 70, RH = 24, GH = 30;
+  const items = state.items.filter(i => okDate(i.deadline)).map(i => ({ ...i, groep: i.groep || 'Overig' }));
+  if (okDate(state.festival.datum)) items.push({ _id: 'fest', groep: FEST, wat: state.festival.naam, start: '', deadline: state.festival.datum });
+  const vis = items.filter(i => !hidden.has(i.groep) && !(hideDone && i.klaar));
+  const abs = absences(), showAbs = abs.length && !hidden.has(AW);
+  const people = [...new Set(abs.map(a => a.wie || '?'))];
+  if (!vis.length && !showAbs) { box.innerHTML = '<p class="hint">Niets om te tonen.</p>'; return; }
+  const all = vis.flatMap(i => [okDate(i.start) ? i.start : i.deadline, i.deadline])
+    .concat(showAbs ? abs.filter(a => a.ok).flatMap(a => [a.van, a.tot]) : [], [todayIso()], okDate(state.festival.datum) ? [state.festival.datum] : []);
+  const lo = Math.min(...all.map(t)) - 5, hi = Math.max(...all.map(t)) + 10;
+  const X = d => L + (t(d) - lo) / (hi - lo) * (W - L - R);
+
+  const rows = [];
+  if (showAbs) { rows.push({ type: 'g', g: AW, label: 'WIE IS ER WEG' }); people.forEach(p => rows.push({ type: 'a', p })); }
+  groupsList().forEach(g => {
+    const gi = vis.filter(i => i.groep === g).sort((a,b) => ((okDate(a.start) ? a.start : a.deadline)).localeCompare(okDate(b.start) ? b.start : b.deadline) || a.deadline.localeCompare(b.deadline));
+    if (!gi.length) return;
+    rows.push({ type: 'g', g }); gi.forEach(i => rows.push({ type: 'i', i }));
+  });
+  let y = 44; rows.forEach(r => { r.y = y + (r.type === 'g' ? GH * .6 : RH / 2); y += r.type === 'g' ? GH : RH; });
+  const H = y + 24, xt = X(todayIso());
+
+  const ticks = []; let m = new Date(lo * DAY); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1));
+  while (m.getTime() / DAY <= hi) { ticks.push(m.toISOString().slice(0,10)); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1)); }
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Tijdlijn"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--quiet)" fill-opacity=".08"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--quiet)" stroke-width="2" stroke-opacity=".35"/></pattern></defs>`;
+  ticks.forEach(d => { const x = X(d);
+    s += `<line x1="${x}" x2="${x}" y1="34" y2="${H-18}" stroke="var(--grid)"/><text x="${x+4}" y="24" font-size="12" fill="var(--quiet)">${MN[+d.slice(5,7)-1]}${d.slice(5,7) === '01' ? ' ' + d.slice(0,4) : ''}</text>`; });
+  s += `<line x1="${L}" x2="${W-R+8}" y1="34" y2="34" stroke="var(--line)"/>`;
+
+  rows.forEach(r => {
+    if (r.type === 'g') { s += `<text x="0" y="${r.y+4}" font-size="12" font-weight="700" letter-spacing=".04em" fill="var(${COL[r.g] || '--quiet'})">${esc(r.label || r.g.toUpperCase())}</text><line x1="0" x2="${W}" y1="${r.y+11}" y2="${r.y+11}" stroke="var(--grid)"/>`; return; }
+    if (r.type === 'a') {
+      const mine = abs.filter(a => (a.wie || '?') === r.p);
+      s += `<text x="10" y="${r.y+4}" font-size="13" fill="var(--quiet)">${esc(r.p)}</text>`;
+      mine.filter(a => a.ok).forEach(a => {
+        const x1 = X(a.van), x2 = X(iso(t(a.tot) + 1));
+        s += `<rect x="${x1}" y="${r.y-7}" width="${Math.max(x2-x1,4)}" height="14" rx="4" fill="url(#hatch)" stroke="var(--line)"><title>${esc(r.p)} weg${a.wispo ? ' (wispo)' : ''}: ${fmt(a.van)} t/m ${fmt(a.tot)}</title></rect>`;
+        if (a.wispo && x2 - x1 > 34) s += `<text x="${(x1+x2)/2}" y="${r.y+4}" font-size="10.5" text-anchor="middle" fill="var(--quiet)" pointer-events="none">wispo</text>`;
+      });
+      if (!mine.some(a => a.ok) && mine.some(a => a.wispo)) s += `<text x="${xt+8}" y="${r.y+4}" font-size="11.5" font-style="italic" fill="var(--quiet)">wispo · datum nog invullen</text>`;
+      return;
+    }
+    const it = r.i, c = `var(${COL[it.groep]})`, late = isLate(it), fest = it.groep === FEST, done = it.klaar;
+    const max = small ? 17 : 30, label = (it.wat || '(zonder naam)').length > max ? it.wat.slice(0, max-1) + '…' : (it.wat || '(zonder naam)');
+    s += `<g class="bar" data-id="${it._id}" opacity="${done ? .35 : 1}"><text x="10" y="${r.y+4}" font-size="13" ${fest ? 'font-weight="700"' : ''} fill="var(--ink)">${done ? '✓ ' : ''}${esc(label)}</text>`;
+    if (okDate(it.start) && it.start < it.deadline) {
+      const x1 = X(it.start), x2 = X(it.deadline);
+      s += `<rect x="${x1}" y="${r.y-6}" width="${Math.max(x2-x1,6)}" height="12" rx="6" fill="${c}" fill-opacity=".22" stroke="${late ? 'var(--danger)' : c}" stroke-width="${late ? 2 : 1.2}"/><text x="${x2+7}" y="${r.y+4}" font-size="11.5" fill="${late ? 'var(--danger)' : 'var(--quiet)'}">${fmt(it.deadline)}</text>`;
+    } else {
+      const x = X(it.deadline), z = fest ? 8 : 6;
+      s += `<path d="M${x} ${r.y-z}l${z} ${z}l${-z} ${z}l${-z} ${-z}z" fill="${late ? 'var(--danger)' : c}"/><text x="${x+z+5}" y="${r.y+4}" font-size="11.5" ${fest ? 'font-weight="700"' : ''} fill="${late ? 'var(--danger)' : fest ? 'var(--ink)' : 'var(--quiet)'}">${fmt(it.deadline)}</text>`;
+    }
+    s += `<rect x="0" y="${r.y-RH/2}" width="${W}" height="${RH}" fill="transparent"/></g>`;
+  });
+  if (okDate(state.festival.datum)) { const xf = X(state.festival.datum); s += `<line x1="${xf}" x2="${xf}" y1="34" y2="${H-18}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 4" pointer-events="none"/>`; }
+  s += `<line x1="${xt}" x2="${xt}" y1="30" y2="${H-18}" stroke="var(--danger)" stroke-width="1.5" pointer-events="none"/><text x="${xt}" y="${H-4}" font-size="11" text-anchor="middle" fill="var(--danger)">vandaag</text></svg>`;
+  box.innerHTML = s;
+
+  const tip = document.getElementById('tip');
+  box.querySelectorAll('.bar').forEach(g => {
+    const it = items.find(i => i._id === g.dataset.id);
+    g.onmousemove = ev => {
+      const aw = awayOn(it.wie, it.deadline);
+      tip.innerHTML = `<b>${esc(it.wat)}</b><br>${okDate(it.start) && it.start < it.deadline ? fmt(it.start) + ' – ' : ''}${fmtLong(it.deadline)}${it.wie ? '<br>' + esc(it.wie) : ''}${aw.length ? '<br>🌴 ' + esc(aw.map(a => a.wie).join(', ')) + ' weg' : ''}${it.klaar ? '<br>✓ afgerond' : isLate(it) ? '<br>te laat' : ''}`;
+      tip.style.left = Math.min(ev.clientX + 12, innerWidth - 270) + 'px'; tip.style.top = ev.clientY + 14 + 'px'; tip.style.opacity = 1;
+    };
+    g.onmouseleave = () => tip.style.opacity = 0;
+    g.onclick = () => jump(it._id);
+  });
+}
+
+function jump(id){
+  const tr = document.querySelector(`tr[data-id="${id}"]`); if (!tr) return;
+  tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  tr.classList.remove('flash'); void tr.offsetWidth; tr.classList.add('flash');
+}
+
+function palmCell(it){
+  const aw = awayOn(it.wie, it.deadline);
+  return aw.length ? `<span title="${esc(aw.map(a => `${a.wie} weg t/m ${fmt(a.tot)}`).join(', '))}">🌴</span>` : '';
+}
+
+function renderItems(){
+  const tb = document.getElementById('rows');
+  const list = [...state.items].sort((a,b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+  tb.innerHTML = list.map(it => `<tr data-id="${it._id}" class="${it.klaar ? 'done' : ''} ${isLate(it) ? 'late' : ''}">
+    <td><input type="text" data-f="wat" value="${esc(it.wat)}" aria-label="Wat" style="min-width:240px"></td>
+    <td><input type="text" data-f="groep" value="${esc(it.groep)}" list="groups" aria-label="Groep" style="min-width:150px"></td>
+    <td><input type="date" data-f="start" value="${esc(it.start)}" aria-label="Start"></td>
+    <td><input type="date" data-f="deadline" value="${esc(it.deadline)}" aria-label="Deadline"></td>
+    <td><input type="text" data-f="wie" value="${esc(it.wie)}" placeholder="naam" aria-label="Wie" style="min-width:90px"></td>
+    <td class="palm">${palmCell(it)}</td>
+    <td class="c"><input type="checkbox" data-f="klaar" ${it.klaar ? 'checked' : ''} aria-label="Klaar"></td>
+    <td class="del"><button aria-label="Verwijder" title="Verwijder">✕</button></td></tr>`).join('');
+  tb.querySelectorAll('tr').forEach(tr => {
+    const it = state.items.find(i => i._id === tr.dataset.id);
+    tr.querySelectorAll('[data-f]').forEach(inp => {
+      const f = inp.dataset.f;
+      if (f === 'wat' || f === 'wie' || f === 'groep') {
+        inp.oninput = () => { it[f] = inp.value; changed(); renderChart(); tr.querySelector('.palm').innerHTML = palmCell(it); };
+        inp.onchange = () => { renderHeader(); renderChips(); renderChart(); };
+      } else {
+        inp.onchange = () => { it[f] = f === 'klaar' ? inp.checked : inp.value; changed(); renderAll(); };
+      }
+    });
+    tr.querySelector('.del button').onclick = () => { if (confirm(`"${it.wat}" verwijderen?`)) { state.items = state.items.filter(i => i !== it); changed(); renderAll(); } };
+  });
+}
+
+function renderAbs(){
+  const tb = document.getElementById('absrows');
+  tb.innerHTML = state.afwezig.map(a => `<tr data-id="${a._id}">
+    <td><input type="text" data-f="wie" value="${esc(a.wie)}" placeholder="naam" aria-label="Wie"></td>
+    <td class="c"><input type="checkbox" data-f="wispo" ${a.wispo ? 'checked' : ''} aria-label="Wispo"></td>
+    <td><input type="date" data-f="van" value="${esc(a.wispo ? '' : a.van)}" ${a.wispo ? 'disabled' : ''} aria-label="Van"></td>
+    <td><input type="date" data-f="tot" value="${esc(a.wispo ? '' : a.tot)}" ${a.wispo ? 'disabled' : ''} aria-label="Tot en met"></td>
+    <td class="del"><button aria-label="Verwijder" title="Verwijder">✕</button></td></tr>`).join('');
+  tb.querySelectorAll('tr').forEach(tr => {
+    const a = state.afwezig.find(x => x._id === tr.dataset.id);
+    tr.querySelectorAll('[data-f]').forEach(inp => {
+      const f = inp.dataset.f;
+      if (f === 'wie') { inp.oninput = () => { a.wie = inp.value; changed(); }; inp.onchange = () => renderAll(); }
+      else inp.onchange = () => { a[f] = f === 'wispo' ? inp.checked : inp.value; changed(); renderAll(); };
+    });
+    tr.querySelector('.del button').onclick = () => { state.afwezig = state.afwezig.filter(x => x !== a); changed(); renderAll(); };
+  });
+}
+
+function renderAll(){ renderHeader(); renderChips(); renderChart(); renderItems(); renderAbs(); }
+
+// ---------- knoppen ----------
+document.getElementById('fname').oninput = e => { state.festival.naam = e.target.value; changed(); renderChart(); };
+document.getElementById('fdate').onchange = e => { state.festival.datum = e.target.value; changed(); renderAll(); };
+document.getElementById('wvan').onchange = e => { state.wispo.van = e.target.value; changed(); renderAll(); };
+document.getElementById('wtot').onchange = e => { state.wispo.tot = e.target.value; changed(); renderAll(); };
+document.getElementById('hideDone').onchange = e => { hideDone = e.target.checked; renderChart(); };
+document.getElementById('addItem').onclick = () => {
+  const it = { groep: 'Artiesten', wat: 'Nieuwe deadline', start: '', deadline: todayIso(), wie: '', klaar: false };
+  state.items.push(it); withIds(); changed(); renderAll(); jump(it._id);
+  const inp = document.querySelector(`tr[data-id="${it._id}"] input`); if (inp) { inp.focus(); inp.select(); }
+};
+document.getElementById('addAbs').onclick = () => {
+  const a = { wie: '', wispo: false, van: todayIso(), tot: todayIso() };
+  state.afwezig.push(a); withIds(); changed(); renderAll();
+  const inp = document.querySelector(`#absrows tr[data-id="${a._id}"] input`); if (inp) inp.focus();
+};
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(renderChart, 120); });
+renderAll();
+</script>
+
+
+</body></html>
